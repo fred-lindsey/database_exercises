@@ -2,7 +2,7 @@ USE albums_db;
 SHOW TABLES;
 -- shows tables in DB
 DESCRIBE albums;
--- shows table attributs
+-- shows table attributes
 SELECT * FROM albums;
 -- shows all info in table
 -- 3. Explore table structure
