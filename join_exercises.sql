@@ -2,16 +2,12 @@
 USE join_example_db;
 
 # 2. a. JOIN example
-SELECT 
-	users.name AS user_name, 
-    roles.name AS role_name
+SELECT *
 FROM users
 JOIN roles on users.role_id = roles.id;
 
 # 2. b. LEFT JOIN example
-SELECT 
-	users.name AS user_name, 
-    roles.name AS role_name
+SELECT *										# yields all data, even where right side has null values
 FROM users
 LEFT JOIN roles on users.role_id = roles.id;
 
@@ -65,13 +61,40 @@ JOIN departments AS d ON d.dept_no = de.dept_no
 WHERE dept_name = 'Customer Service' AND de.to_date = '9999-01-01';
 
 /* 5. Find the salary of all current Managers */
+USE employees;
 SELECT
-	s.salary AS mgr_salary,
-    CONCAT(e.first_name, ' ', e.last_name) AS mgr_name,
-    dm.dept_no AS department_no,
+	CONCAT(e.first_name, ' ', e.last_name) AS mgr_name,
+    s.salary AS mgr_salary,
+    dm.dept_no AS mgr_dept,
     d.dept_name AS department_name
-FROM salaries AS s
-JOIN employees AS e ON e.emp_no = s.emp_no
-JOIN dept_manager AS dm ON dm.emp_no = e.emp_no
-JOIN departments AS d ON dept_name
-WHERE s.to_date = '9999-01-01';
+FROM employees AS e
+JOIN salaries AS s ON s.emp_no = e.emp_no
+JOIN dept_manager AS dm ON dm.emp_no = s.emp_no 
+JOIN departments AS d ON d.dept_no = dm.dept_no
+WHERE s.to_date = '9999-01-01'
+ORDER BY d.dept_name; # extra, for readability
+
+/* 6. Find the number of current employees in each department */
+USE employees;
+SELECT
+	d.dept_no,
+    d.dept_name,
+    COUNT(emp_no) AS num_employees
+FROM departments AS d
+JOIN dept_emp AS de ON de.dept_no = d.dept_no
+WHERE de.to_date = '9999-01-01'
+GROUP BY dept_name; # 
+
+/* 7. Which department has the highest avg salary? */
+SELECT
+    d.dept_name,
+    ROUND(AVG(salary)) AS average_salary
+FROM employees AS e
+JOIN salaries AS s on s.emp_no = e.emp_no
+	AND s.to_date > curdate()
+    AND de.to_date > curdate()
+JOIN dept_emp AS de ON de.emp_no = s.emp_no
+JOIN departments AS d ON d.dept_no = de.dept_no
+GROUP BY dept_name
+ORDER BY average_salary DESC
+LIMIT 1;

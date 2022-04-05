@@ -17,7 +17,7 @@ SELECT emp_no FROM dept_manager
 WHERE dept_manager.to_date>now()
 
 SELECT first_name, last_name
-FROm empoyees
+FROM empoyees
 WHERE emp_no is IN(
 
 		SELECT emp_no FROM dept_manager
