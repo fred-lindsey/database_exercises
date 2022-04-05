@@ -79,29 +79,18 @@ WHERE salaries.salary > (SELECT ROUND(AVG(salary)) AS avg_salary FROM salaries)
 ORDER BY salaries.salary DESC;
 
 /* 6. How many current salaries are within 1 standard deviation of the current highest 
-salary? (Hint: you can use a built in function to calculate the standard deviation.) What percentage of 
-all salaries is this? */
+salary? (Hint: you can use a built in function to calculate the standard deviation.) 
+What percentage of all salaries is this? */
 
 SELECT MAX(salary) FROM salaries WHERE to_date > now(); # current max salary
 
 SELECT STDDEV(salary) FROM salaries WHERE to_date > now(); # stddev for current salary
-
 SELECT COUNT(*) 
 FROM salaries
 WHERE to_date > now()
 AND salary > (
 (SELECT MAX(salary) FROM salaries WHERE to_date > now()) - 
 (SELECT STDDEV(salary) FROM salaries WHERE to_date > now())
+			);
 
-);
 
-
-SELECT max(salary)
-FROM salaries
-WHERE to_date > CURDATE(); #158220
-
-SELECT COUNT(*)
-FROM salaries
-WHERE (
-	salary IN (max(salary) - STDDEV(salary)
-		)
