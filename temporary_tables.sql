@@ -61,6 +61,7 @@ alter table example1 ADD email VARCHAR(100)
 last_name, and dept_name for employees currently with that department. */
  USE employees;
  SET SQL_safe_updates = 0;
+ 
  CREATE TEMPORARY TABLE jemison_1750.employees_with_departments AS
  SELECT first_name, last_name, dept_name
  FROM employees
@@ -110,6 +111,8 @@ ALTER TABLE jemison_1750.payment ADD cents_amount INT(10);
 UPDATE jemison_1750.payment
 SET cents_amount = amount * 100;
 
+ALTER TABLE jemison_1750.payment MODIFY cents_amount INT NOT NULL;
+
 SELECT *					#check that it creates the desired table with variables
 FROM jemison_1750.payment;
 
@@ -130,6 +133,10 @@ JOIN departments AS d ON d.dept_no = de.dept_no
 WHERE s.to_date > NOW()
 GROUP BY dept_name
 LIMIT 100;
+
+SELECT *
+FROM jemison_1750.current_pay; 	# check that the table displayed correct 
+								# variables/ ran correctly
 
 # Step 2: create current pay table
 SELECT *
@@ -162,4 +169,39 @@ SELECT *
 FROM jemison_1750.historic_and_current_pay;
 
 #STEP 4: add z-score
+USE jemison_1750;
+SELECT * FROM jemison_1750.historic_and_current_pay;
+
+ALTER TABLE jemison_1750.historic_and_current_pay ADD z_score FLOAT(8);
+ALTER TABLE jemison_1750.historic_and_current_pay ADD pay_diff FLOAT(8);
+ALTER TABLE jemison_1750.historic_and_current_pay ADD stddev FLOAT(8);
+ALTER TABLE jemison_1750.historic_and_current_pay DROP COLUMN stddev;
+ALTER TABLE jemison_1750.historic_and_current_pay ADD std_dev FLOAT(8);
+
+USE jemison_1750;
+UPDATE jemison_1750.historic_and_current_pay
+SET pay_diff = current_pay - historic_pay;
+
+USE jemison_1750;
+UPDATE jemison_1750.historic_and_current_pay
+SET std_dev = STD(AVG(current_pay));
+
+-- SET z_score = (
+-- 			SELECT (current_pay - historic_pay) / STDDEV(current_pay)
+--             FROM historic_and_current_pay
+--             );
+
+
+-- SELECT 		(
+-- SELECT AVG(salary) FROM employees.salaries WHERE salaries.to_date < NOW()) as historic_data,
+-- (CurAvgSal - (SELECT AVG(salary) FROM employees.salaries)
+-- 			)
+-- 		/
+-- 			(
+-- 		SELECT stddev(salary) FROM employees.salaries
+-- 			) 
+-- 		AS zscore, CurAvgSal, DeptSal.dept_name
+-- FROM DeptSal
+-- GROUP BY CurAvgSal, DeptSal.dept_name
+-- ORDER BY zscore DESC;
 
