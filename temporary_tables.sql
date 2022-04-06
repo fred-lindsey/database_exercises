@@ -25,7 +25,7 @@ INSERT INTo my_numbers(n) VALUES (1), (2);
 >> if using your own db, you will need to reference the file name  with their 
 DB name:
 
-USE fred;
+USE jemison_1750;
 
 CREATE TEMPORARY TABLE short_employees AS
 select *
@@ -120,23 +120,7 @@ now to work for? The worst? */
 
 # Step 1: create historic pay table
 USE employees;
-CREATE TEMPORARY TABLE jemison_1750.historic_pay_with_departments AS
-SELECT 
-	AVG(salary) AS historic_pay, 
-	d.dept_name
-FROM salaries AS s
-JOIN dept_emp AS de ON de.emp_no = s.emp_no
-JOIN departments AS d ON d.dept_no = de.dept_no
-WHERE s.to_date <= NOW()
-GROUP BY dept_name
-LIMIT 100;
-
-SELECT *											# success, checks out with table created
-FROM jemison_1750.historic_pay_with_departments;
-
-# Step 2: create current pay table
-USE employees;
-CREATE TEMPORARY TABLE jemison_1750.current_pay_with_departments AS
+CREATE TEMPORARY TABLE jemison_1750.current_pay AS
 SELECT 
 	AVG(salary) AS current_pay, 
 	d.dept_name
@@ -147,20 +131,35 @@ WHERE s.to_date > NOW()
 GROUP BY dept_name
 LIMIT 100;
 
-SELECT *											# success, checks out with table2 created
-FROM jemison_1750.current_pay_with_departments;
+# Step 2: create current pay table
+SELECT *
+FROM jemison_1750.current_pay;
 
-#Step 3: insert historic pay column into current pay table
-ALTER TABLE jemison_1750.current_pay_with_departments ADD historic_pay INT;
-UPDATE jemison_1750.current_pay_with_departments 
-SET historic_pay = (AVG(salary) WHERE s.to_date <= NOW();
+USE employees;
+CREATE TEMPORARY TABLE jemison_1750.historic_pay AS
+SELECT 
+	AVG(salary) AS historic_pay,
+	dept_name
+FROM salaries
+JOIN dept_emp ON dept_emp.emp_no = salaries.emp_no
+JOIN departments ON departments.dept_no = dept_emp.dept_no
+WHERE salaries.to_date <= NOW()
+GROUP BY dept_name
+LIMIT 100;
 
-UPDATE jemison_1750.current_pay_with_departments  
-SET historic_pay =   (
-	SELECT 
-		AVG(salary) AS historic_pay   
-    FROM salaries AS s 
-	JOIN dept_emp AS de ON de.emp_no = s.emp_no 
-	JOIN departments AS d ON d.dept_no = de.dept_no 
-	WHERE s.to_date <= NOW() 
-    LIMIT 100);
+SELECT *
+FROM jemison_1750.historic_pay;
+
+ # STEP 3: create a thrid table, that joins the two temporary tables on dept_name
+CREATE TEMPORARY TABLE jemison_1750.historic_and_current_pay AS
+SELECT 
+	hp.dept_name, hp.historic_pay AS historic_pay, cp.current_pay AS current_pay
+FROM jemison_1750.historic_pay AS hp
+JOIN jemison_1750.current_pay AS cp ON cp.dept_name = hp.dept_name
+LIMIT 100;
+
+SELECT *
+FROM jemison_1750.historic_and_current_pay;
+
+#STEP 4: add z-score
+
