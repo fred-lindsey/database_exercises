@@ -182,9 +182,16 @@ USE jemison_1750;
 UPDATE jemison_1750.historic_and_current_pay
 SET pay_diff = current_pay - historic_pay;
 
+CREATE TEMPORARY TABLE jemison_1750.pay_std_dev AS
+SELECT STD(current_pay)
+FROM jemison_1750.historic_and_current_pay;
+
+SELECT *
+FROM jemison_1750.pay_std_dev;
+ 
 USE jemison_1750;
 UPDATE jemison_1750.historic_and_current_pay
-SET std_dev = STD(AVG(current_pay));
+SET std_dev = jemison_1750.pay_std_dev.STD(current_pay);
 
 -- SET z_score = (
 -- 			SELECT (current_pay - historic_pay) / STDDEV(current_pay)
@@ -204,4 +211,6 @@ SET std_dev = STD(AVG(current_pay));
 -- FROM DeptSal
 -- GROUP BY CurAvgSal, DeptSal.dept_name
 -- ORDER BY zscore DESC;
+
+CREATE TEMPORARY TABLE numbers AS select
 
